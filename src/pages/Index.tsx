@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Copy, Eye, EyeOff } from "lucide-react";
+import { Loader2, Plus, Copy, Eye, EyeOff, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -76,6 +76,31 @@ const Index = () => {
     },
   });
 
+  // Delete credential
+  const deleteCredential = useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase
+        .from("Credentials")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["credentials"] });
+      toast({
+        title: "Success",
+        description: "Credential deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCopy = async (text: string) => {
     await navigator.clipboard.writeText(text);
     toast({
@@ -87,6 +112,12 @@ const Index = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     addCredential.mutate(newCredential);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this credential?")) {
+      deleteCredential.mutate(id);
+    }
   };
 
   if (isLoading) {
@@ -166,6 +197,18 @@ const Index = () => {
                       onClick={() => handleCopy(cred["Username/Email"]?.[0] || "")}
                     >
                       <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleDelete(cred.id)}
+                      disabled={deleteCredential.isPending}
+                    >
+                      {deleteCredential.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
