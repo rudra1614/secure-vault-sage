@@ -35,8 +35,9 @@ const Index = () => {
     return session;
   };
 
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
+    const handleLogout = async () => {
+    const { error } = await 
+  supabase.auth.signOut();
     if (error) {
       toast({
         title: "Error",
@@ -138,7 +139,8 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center 
+    justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -146,27 +148,7 @@ const Index = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-       <
-div
- className="
-flex justify
--
-between
- 
-items
--
-center
- mb-8">
-        <h1 className="text-3xl font-bold">Password Manager</h1>
-        <Button 
-          variant="outline" 
-          onClick={handleLogout}
-          className="flex items-center gap-2"
-        >
-          <LogOut className="h-4 w-4" />
-          Logout
-        </Button>
-      </div>
+      <h1 className="text-3xl font-bold mb-8">Password Manager</h1>
       
       {/* Add New Credential Form */}
       <Card className="mb-8">
@@ -183,7 +165,8 @@ center
               <Input
                 id="website"
                 value={newCredential.website}
-                onChange={(e) => setNewCredential(prev => ({ ...prev, website: e.target.value }))}
+                onChange={(e) => setNewCredential(prev =>
+                ({ ...prev, website: e.target.value }))}
                 required
               />
             </div>
