@@ -11,20 +11,26 @@ export type Database = {
     Tables: {
       Credentials: {
         Row: {
+          created_at: string
           id: number
           Password: string | null
+          user_id: string
           "Username/Email": string[] | null
           "Website UrL": string | null
         }
         Insert: {
+          created_at?: string
           id?: number
           Password?: string | null
+          user_id?: string
           "Username/Email"?: string[] | null
           "Website UrL"?: string | null
         }
         Update: {
+          created_at?: string
           id?: number
           Password?: string | null
+          user_id?: string
           "Username/Email"?: string[] | null
           "Website UrL"?: string | null
         }
