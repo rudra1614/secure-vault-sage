@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Copy, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Loader2, Plus, Copy, Eye, EyeOff, Trash2
+  ,
+   
+  LogOut 
+  } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -31,6 +35,18 @@ const Index = () => {
     return session;
   };
 
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      navigate("/auth");
+    }
+  };
   // Fetch credentials
   const { data: credentials, isLoading } = useQuery({
     queryKey: ["credentials"],
@@ -130,7 +146,27 @@ const Index = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">Password Manager</h1>
+       <
+div
+ className="
+flex justify
+-
+between
+ 
+items
+-
+center
+ mb-8">
+        <h1 className="text-3xl font-bold">Password Manager</h1>
+        <Button 
+          variant="outline" 
+          onClick={handleLogout}
+          className="flex items-center gap-2"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
+      </div>
       
       {/* Add New Credential Form */}
       <Card className="mb-8">
