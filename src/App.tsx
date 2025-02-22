@@ -23,8 +23,12 @@ const App = () => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(!!session);
+      if (!session) {
+        // Clear query cache when user logs out
+        queryClient.clear();
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -44,7 +48,7 @@ const App = () => {
                 session === null ? null : session ? (
                   <Index />
                 ) : (
-                  <Navigate to="/auth" replace />
+                  <Navigate to="/" replace />
                 )
               }
             />
