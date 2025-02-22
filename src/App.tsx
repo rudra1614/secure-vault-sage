@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,12 +36,11 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
             <Route
-              path="/dashboard"
+              path="/"
               element={
                 session === null ? null : session ? (
-                  <Dashboard />
+                  <Index />
                 ) : (
                   <Navigate to="/auth" replace />
                 )
@@ -54,7 +52,7 @@ const App = () => {
                 session === null ? null : !session ? (
                   <Auth />
                 ) : (
-                  <Navigate to="/dashboard" replace />
+                  <Navigate to="/" replace />
                 )
               }
             />
