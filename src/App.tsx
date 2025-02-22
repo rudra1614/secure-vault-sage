@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -36,8 +37,9 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<Home />} />
             <Route
-              path="/"
+              path="/passwords"
               element={
                 session === null ? null : session ? (
                   <Index />
@@ -52,7 +54,7 @@ const App = () => {
                 session === null ? null : !session ? (
                   <Auth />
                 ) : (
-                  <Navigate to="/" replace />
+                  <Navigate to="/passwords" replace />
                 )
               }
             />
