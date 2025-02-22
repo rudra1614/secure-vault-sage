@@ -48,7 +48,7 @@ const App = () => {
                 session === null ? null : session ? (
                   <Index />
                 ) : (
-                  <Navigate to="" replace />
+                  <Navigate to="/root" replace />
                 )
               }
             />
