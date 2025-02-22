@@ -28,7 +28,7 @@ const Auth = () => {
       if (error) throw error;
 
       if (isLogin) {
-        navigate("/");
+        navigate("/passwords");
         toast({
           title: "Success",
           description: "Logged in successfully",
