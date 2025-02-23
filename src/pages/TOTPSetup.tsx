@@ -14,7 +14,6 @@ const TOTPSetup = () => {
   const [secret, setSecret] = useState<string>("");
   const [verifyCode, setVerifyCode] = useState("");
   const [factorId, setFactorId] = useState<string>("");
-  const [challengeId, setChallengeId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
   const setupTOTP = async () => {
@@ -28,12 +27,7 @@ const TOTPSetup = () => {
       if (totp) {
         setQrCode(totp.qr_code);
         setSecret(totp.secret);
-        // The factorId is part of the uri string, we need to extract it
-        const uriParams = new URLSearchParams(totp.uri.split('?')[1]);
-        const factorIdFromUri = uriParams.get('factorId');
-        if (factorIdFromUri) {
-          setFactorId(factorIdFromUri);
-        }
+        setFactorId(totp.id);
       }
     } catch (error: any) {
       toast({
@@ -56,18 +50,11 @@ const TOTPSetup = () => {
 
     setIsLoading(true);
     try {
-      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ 
-        factorId 
-      });
-      
-      if (challengeError) throw challengeError;
-      if (!challengeData.id) throw new Error("No challenge ID received");
-      
-      setChallengeId(challengeData.id);
+      const { error } = await supabase.auth.mfa.challenge({ factorId });
+      if (error) throw error;
 
-      const { data: verifyData, error: verifyError } = await supabase.auth.mfa.verify({
+      const { error: verifyError } = await supabase.auth.mfa.verify({
         factorId,
-        challengeId: challengeData.id,
         code: verifyCode,
       });
 
@@ -76,10 +63,7 @@ const TOTPSetup = () => {
       // Store the factor ID in our custom table
       const { error: insertError } = await supabase
         .from('totp_factors')
-        .insert([{ 
-          factor_id: factorId,
-          user_id: (await supabase.auth.getUser()).data.user?.id 
-        }]);
+        .insert([{ factor_id: factorId }]);
 
       if (insertError) throw insertError;
 
