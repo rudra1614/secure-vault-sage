@@ -27,7 +27,7 @@ const TOTPSetup = () => {
       if (totp) {
         setQrCode(totp.qr_code);
         setSecret(totp.secret);
-        setFactorId(totp.id);
+        setFactorId(totp.uri.split('?')[1].split('&')[0].split('=')[1]);
       }
     } catch (error: any) {
       toast({
@@ -50,20 +50,32 @@ const TOTPSetup = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.mfa.challenge({ factorId });
-      if (error) throw error;
+      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ 
+        factorId 
+      });
+      
+      if (challengeError) throw challengeError;
 
-      const { error: verifyError } = await supabase.auth.mfa.verify({
+      const { data, error: verifyError } = await supabase.auth.mfa.verify({
         factorId,
+        challengeId: challengeData.id,
         code: verifyCode,
       });
 
       if (verifyError) throw verifyError;
 
+      // Get the current user's ID
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) throw new Error("No user found");
+
       // Store the factor ID in our custom table
       const { error: insertError } = await supabase
         .from('totp_factors')
-        .insert([{ factor_id: factorId }]);
+        .insert({
+          factor_id: factorId,
+          user_id: user.id
+        });
 
       if (insertError) throw insertError;
 
