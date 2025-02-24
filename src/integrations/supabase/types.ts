@@ -36,6 +36,27 @@ export type Database = {
         }
         Relationships: []
       }
+      totp_factors: {
+        Row: {
+          created_at: string
+          factor_id: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          factor_id: string
+          id?: never
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          factor_id?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
