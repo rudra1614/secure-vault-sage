@@ -8,8 +8,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
-import SignUp from "./pages/SignUp";
-import TOTPSetup from "./pages/TOTPSetup";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,27 +48,17 @@ const App = () => {
                 session === null ? null : session ? (
                   <Index />
                 ) : (
-                  <Navigate to="/signup" replace />
+                  <Navigate to="/root" replace />
                 )
               }
             />
             <Route
-              path="/signup"
+              path="/auth"
               element={
                 session === null ? null : !session ? (
-                  <SignUp />
+                  <Auth />
                 ) : (
                   <Navigate to="/passwords" replace />
-                )
-              }
-            />
-            <Route
-              path="/totp-setup"
-              element={
-                session === null ? null : session ? (
-                  <TOTPSetup />
-                ) : (
-                  <Navigate to="/signup" replace />
                 )
               }
             />
