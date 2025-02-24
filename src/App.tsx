@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
+import SignUp from "./pages/SignUp";
 import TOTPSetup from "./pages/TOTPSetup";
 import NotFound from "./pages/NotFound";
 
@@ -49,27 +49,27 @@ const App = () => {
                 session === null ? null : session ? (
                   <Index />
                 ) : (
-                  <Navigate to="/" replace />
+                  <Navigate to="/signup" replace />
                 )
               }
             />
             <Route
-              path="/auth"
+              path="/signup"
               element={
                 session === null ? null : !session ? (
-                  <Auth />
+                  <SignUp />
                 ) : (
                   <Navigate to="/passwords" replace />
                 )
               }
             />
             <Route
-              path="/auth/totp-setup"
+              path="/totp-setup"
               element={
                 session === null ? null : session ? (
                   <TOTPSetup />
                 ) : (
-                  <Navigate to="/auth" replace />
+                  <Navigate to="/signup" replace />
                 )
               }
             />
