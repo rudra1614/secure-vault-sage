@@ -28,10 +28,10 @@ const Auth = () => {
       if (error) throw error;
 
       if (isLogin) {
-        navigate("/passwords");
+        navigate("/auth/totp-setup");
         toast({
           title: "Success",
-          description: "Logged in successfully",
+          description: "Logged in successfully. Setup 2FA for added security!",
         });
       } else {
         toast({
