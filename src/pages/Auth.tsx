@@ -32,13 +32,17 @@ const Auth = () => {
 
         if (error) throw error;
 
-        // Check if MFA is required
-        const { data: { factors }, error: mfaError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        // Check for TOTP factors
+        const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors();
         
-        if (mfaError) throw mfaError;
+        if (factorsError) throw factorsError;
 
-        if (factors && factors.length > 0) {
-          setFactorId(factors[0].id);
+        const totpFactor = factorsData.totp && factorsData.totp.length > 0 
+          ? factorsData.totp[0] 
+          : null;
+
+        if (totpFactor) {
+          setFactorId(totpFactor.id);
           setShowTOTP(true);
         } else {
           navigate("/passwords");

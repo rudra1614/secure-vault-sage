@@ -27,7 +27,12 @@ const TOTPSetup = () => {
       if (data.totp) {
         setQrCode(data.totp.qr_code);
         setSecret(data.totp.secret);
-        setFactorId(data.totp.id);
+        // Extract factor ID from the URI
+        const uriParams = new URLSearchParams(data.totp.uri.split('?')[1]);
+        const factorIdFromUri = uriParams.get('issuer');
+        if (factorIdFromUri) {
+          setFactorId(factorIdFromUri);
+        }
       }
     } catch (error: any) {
       toast({
