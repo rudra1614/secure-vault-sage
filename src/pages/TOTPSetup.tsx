@@ -28,7 +28,6 @@ const TOTPSetup = () => {
       if (totp) {
         setQrCode(totp.qr_code);
         setSecret(totp.secret);
-        // The factorId is part of the uri string, we need to extract it
         const uriParams = new URLSearchParams(totp.uri.split('?')[1]);
         const factorIdFromUri = uriParams.get('factorId');
         if (factorIdFromUri) {
@@ -73,15 +72,21 @@ const TOTPSetup = () => {
 
       if (verifyError) throw verifyError;
 
+      const user = await supabase.auth.getUser();
+      if (!user.data.user?.id) throw new Error("User not found");
+
       // Store the factor ID in our custom table
       const { error: insertError } = await supabase
         .from('totp_factors')
         .insert([{ 
           factor_id: factorId,
-          user_id: (await supabase.auth.getUser()).data.user?.id 
+          user_id: user.data.user.id
         }]);
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw new Error("Failed to store TOTP factor");
+      }
 
       toast({
         title: "Success",
