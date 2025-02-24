@@ -72,15 +72,16 @@ const TOTPSetup = () => {
 
       if (verifyError) throw verifyError;
 
-      const user = await supabase.auth.getUser();
-      if (!user.data.user?.id) throw new Error("User not found");
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user?.id) throw new Error("User not found");
 
       // Store the factor ID in our custom table
       const { error: insertError } = await supabase
         .from('totp_factors')
         .insert([{ 
           factor_id: factorId,
-          user_id: user.data.user.id
+          user_id: user.id
         }]);
 
       if (insertError) {
