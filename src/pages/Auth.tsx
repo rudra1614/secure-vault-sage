@@ -37,11 +37,12 @@ const Auth = () => {
           .from('user_phone_numbers')
           .select('phone_number')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (userError) throw userError;
         if (!userData?.phone_number) throw new Error("No phone number found for this account");
         userPhoneNumber = userData.phone_number;
+        setPhoneNumber(userData.phone_number); // Store the phone number for verification later
       }
 
       setTempSession(session.access_token);
@@ -84,6 +85,7 @@ const Auth = () => {
     setIsVerifying(true);
     try {
       if (!tempSession) throw new Error("Session not found");
+      if (!phoneNumber) throw new Error("Phone number not found");
 
       const response = await fetch(
         'https://obkezbshzvtqmvgbxsth.supabase.co/functions/v1/twilio-verify',
@@ -139,7 +141,7 @@ const Auth = () => {
         if (signUpError) throw signUpError;
         if (!session) throw new Error("No session after signup");
 
-        // Store phone number
+        // Store phone number first
         const { error: phoneError } = await supabase
           .from('user_phone_numbers')
           .insert([{ 
@@ -149,9 +151,12 @@ const Auth = () => {
 
         if (phoneError) throw phoneError;
 
+        // Send verification code to the newly registered phone number
+        await sendVerificationCode(phoneNumber);
+
         toast({
           title: "Success",
-          description: "Account created successfully. Please check your email for verification.",
+          description: "Account created successfully. Please verify with the code sent to your phone.",
         });
       } else {
         // Login flow
@@ -240,6 +245,7 @@ const Auth = () => {
                 setIsLogin(!isLogin);
                 setCodeSent(false);
                 setVerificationCode("");
+                setPhoneNumber("");
               }}
             >
               {isLogin
