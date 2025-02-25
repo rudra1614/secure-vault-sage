@@ -19,8 +19,9 @@ const Auth = () => {
   const [verificationCode, setVerificationCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
+  const [tempSession, setTempSession] = useState<string | null>(null);
 
-  const sendVerificationCode = async () => {
+  const sendVerificationCode = async (userPhoneNumber?: string) => {
     setIsLoading(true);
     try {
       const { data: { session }, error } = await supabase.auth.signInWithPassword({
@@ -30,17 +31,32 @@ const Auth = () => {
 
       if (error) throw error;
 
+      // Get user's stored phone number if not provided
+      if (!userPhoneNumber) {
+        const { data: userData, error: userError } = await supabase
+          .from('user_phone_numbers')
+          .select('phone_number')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (userError) throw userError;
+        if (!userData?.phone_number) throw new Error("No phone number found for this account");
+        userPhoneNumber = userData.phone_number;
+      }
+
+      setTempSession(session.access_token);
+
       const response = await fetch(
         'https://obkezbshzvtqmvgbxsth.supabase.co/functions/v1/twilio-verify',
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
+            'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             action: 'send',
-            phoneNumber: phoneNumber,
+            phoneNumber: userPhoneNumber,
           }),
         }
       );
@@ -67,15 +83,14 @@ const Auth = () => {
   const verifyCode = async () => {
     setIsVerifying(true);
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw error;
+      if (!tempSession) throw new Error("Session not found");
 
       const response = await fetch(
         'https://obkezbshzvtqmvgbxsth.supabase.co/functions/v1/twilio-verify',
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
+            'Authorization': `Bearer ${tempSession}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -111,40 +126,46 @@ const Auth = () => {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    if (!isLogin) {
-      try {
-        const { error } = await supabase.auth.signUp({
+    try {
+      if (!isLogin) {
+        // Sign up flow
+        const { data: { session }, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
         });
 
-        if (error) throw error;
+        if (signUpError) throw signUpError;
+        if (!session) throw new Error("No session after signup");
+
+        // Store phone number
+        const { error: phoneError } = await supabase
+          .from('user_phone_numbers')
+          .insert([{ 
+            user_id: session.user.id,
+            phone_number: phoneNumber 
+          }]);
+
+        if (phoneError) throw phoneError;
 
         toast({
           title: "Success",
-          description: "Account created successfully. Please check your email.",
+          description: "Account created successfully. Please check your email for verification.",
         });
-      } catch (error: any) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
+      } else {
+        // Login flow
+        await sendVerificationCode();
       }
-      return;
-    }
-
-    if (!phoneNumber) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Please enter your phone number",
+        description: error.message,
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsLoading(false);
     }
-
-    await sendVerificationCode();
   };
 
   return (
@@ -175,7 +196,7 @@ const Auth = () => {
                 required
               />
             </div>
-            {isLogin && (
+            {!isLogin && (
               <div className="grid gap-2">
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
