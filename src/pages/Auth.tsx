@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -136,16 +137,28 @@ const Auth = () => {
         });
 
         if (signUpError) throw signUpError;
+        if (!data.user?.id) throw new Error("Failed to create account");
+
+        // First sign in to get the session
+        const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) throw signInError;
+        if (!session) throw new Error("Failed to get session");
 
         const { error: phoneError } = await supabase
           .from('user_phone_numbers')
           .insert([{ 
-            user_id: data.user?.id,
+            user_id: data.user.id,
             phone_number: phoneNumber 
           }]);
 
         if (phoneError) throw phoneError;
 
+        // Use the session token for sending verification code
+        setTempSession(session.access_token);
         await sendVerificationCode(phoneNumber);
 
         toast({
