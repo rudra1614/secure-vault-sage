@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,6 @@ const Auth = () => {
 
       if (error) throw error;
 
-      // Get user's stored phone number if not provided
       if (!userPhoneNumber) {
         const { data: userData, error: userError } = await supabase
           .from('user_phone_numbers')
@@ -42,7 +40,7 @@ const Auth = () => {
         if (userError) throw userError;
         if (!userData?.phone_number) throw new Error("No phone number found for this account");
         userPhoneNumber = userData.phone_number;
-        setPhoneNumber(userData.phone_number); // Store the phone number for verification later
+        setPhoneNumber(userData.phone_number);
       }
 
       setTempSession(session.access_token);
@@ -132,34 +130,29 @@ const Auth = () => {
     
     try {
       if (!isLogin) {
-        // Sign up flow
-        const { data: { session }, error: signUpError } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
         });
 
         if (signUpError) throw signUpError;
-        if (!session) throw new Error("No session after signup");
 
-        // Store phone number first
         const { error: phoneError } = await supabase
           .from('user_phone_numbers')
           .insert([{ 
-            user_id: session.user.id,
+            user_id: data.user?.id,
             phone_number: phoneNumber 
           }]);
 
         if (phoneError) throw phoneError;
 
-        // Send verification code to the newly registered phone number
         await sendVerificationCode(phoneNumber);
 
         toast({
           title: "Success",
-          description: "Account created successfully. Please verify with the code sent to your phone.",
+          description: "Account created. Please verify with the code sent to your phone.",
         });
       } else {
-        // Login flow
         await sendVerificationCode();
       }
     } catch (error: any) {
