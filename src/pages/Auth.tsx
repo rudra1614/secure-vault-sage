@@ -15,158 +15,29 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
-  const [tempSession, setTempSession] = useState<string | null>(null);
-
-  const sendVerificationCode = async (userPhoneNumber?: string) => {
-    setIsLoading(true);
-    try {
-      const { data: { session }, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (!userPhoneNumber) {
-        const { data: userData, error: userError } = await supabase
-          .from('user_phone_numbers')
-          .select('phone_number')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-
-        if (userError) throw userError;
-        if (!userData?.phone_number) throw new Error("No phone number found for this account");
-        userPhoneNumber = userData.phone_number;
-        setPhoneNumber(userData.phone_number);
-      }
-
-      setTempSession(session.access_token);
-
-      const response = await fetch(
-        'https://obkezbshzvtqmvgbxsth.supabase.co/functions/v1/twilio-verify',
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'send',
-            phoneNumber: userPhoneNumber,
-          }),
-        }
-      );
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-
-      setCodeSent(true);
-      toast({
-        title: "Code Sent",
-        description: "Please check your phone for the verification code.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const verifyCode = async () => {
-    setIsVerifying(true);
-    try {
-      if (!tempSession) throw new Error("Session not found");
-      if (!phoneNumber) throw new Error("Phone number not found");
-
-      const response = await fetch(
-        'https://obkezbshzvtqmvgbxsth.supabase.co/functions/v1/twilio-verify',
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${tempSession}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'verify',
-            phoneNumber: phoneNumber,
-            code: verificationCode,
-          }),
-        }
-      );
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-
-      if (result.valid) {
-        toast({
-          title: "Success",
-          description: "Phone number verified successfully!",
-        });
-        navigate("/passwords");
-      } else {
-        throw new Error("Invalid verification code");
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsVerifying(false);
-    }
-  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
-      if (!isLogin) {
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+      const { error } = isLogin
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({ email, password });
 
-        if (signUpError) throw signUpError;
-        if (!data.user?.id) throw new Error("Failed to create account");
+      if (error) throw error;
 
-        // First sign in to get the session
-        const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) throw signInError;
-        if (!session) throw new Error("Failed to get session");
-
-        const { error: phoneError } = await supabase
-          .from('user_phone_numbers')
-          .insert([{ 
-            user_id: data.user.id,
-            phone_number: phoneNumber 
-          }]);
-
-        if (phoneError) throw phoneError;
-
-        // Use the session token for sending verification code
-        setTempSession(session.access_token);
-        await sendVerificationCode(phoneNumber);
-
+      if (isLogin) {
+        navigate("/passwords");
         toast({
           title: "Success",
-          description: "Account created. Please verify with the code sent to your phone.",
+          description: "Logged in successfully",
         });
       } else {
-        await sendVerificationCode();
+        toast({
+          title: "Success",
+          description: "Account created successfully. Please verify your email.",
+        });
       }
     } catch (error: any) {
       toast({
@@ -180,7 +51,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-black-50">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{isLogin ? "Login" : "Sign Up"}</CardTitle>
@@ -207,52 +78,14 @@ const Auth = () => {
                 required
               />
             </div>
-            {!isLogin && (
-              <div className="grid gap-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+1234567890"
-                  required
-                />
-              </div>
-            )}
-            {codeSent && (
-              <div className="grid gap-2">
-                <Label htmlFor="code">Verification Code</Label>
-                <Input
-                  id="code"
-                  type="text"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  placeholder="Enter code"
-                />
-                <Button
-                  type="button"
-                  onClick={verifyCode}
-                  disabled={isVerifying}
-                  className="mt-2"
-                >
-                  {isVerifying ? "Verifying..." : "Verify Code"}
-                </Button>
-              </div>
-            )}
-            <Button type="submit" className="w-full" disabled={isLoading || codeSent}>
-              {isLoading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLogin ? "Login" : "Sign Up"}
             </Button>
             <Button
               type="button"
               variant="link"
               className="w-full"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setCodeSent(false);
-                setVerificationCode("");
-                setPhoneNumber("");
-              }}
+              onClick={() => setIsLogin(!isLogin)}
             >
               {isLogin
                 ? "Don't have an account? Sign Up"
