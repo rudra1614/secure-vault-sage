@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,77 +11,90 @@ import { supabase } from "@/integrations/supabase/client";
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState("");
-  const [totpSetup, setTotpSetup] = useState(false);
-  const [totpSecret, setTotpSecret] = useState(null);
 
-  // Function to handle sign-in
-  const handleSignIn = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast({ title: "Error", description: error.message });
-      return;
-    }
-    
-    if (data.session?.user?.mfa_enabled) {
-      setTotpSetup(true);
-    } else {
-      navigate("/dashboard");
-    }
-  };
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  // Function to enable TOTP
-  const enableTOTP = async () => {
-    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
-    if (error) {
-      toast({ title: "Error", description: error.message });
-      return;
-    }
-    setTotpSecret(data.totp.secret);
-  };
+    try {
+      const { error } = isLogin
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({ email, password });
 
-  // Function to verify OTP
-  const verifyTOTP = async () => {
-    const { error } = await supabase.auth.mfa.verify({ factorId: "totp", code: otp });
-    if (error) {
-      toast({ title: "Error", description: error.message });
-      return;
+      if (error) throw error;
+
+      if (isLogin) {
+        navigate("/passwords");
+        toast({
+          title: "Success",
+          description: "Logged in successfully",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Account created successfully. Please verify your email.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    navigate("/dashboard");
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Login</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {!totpSetup ? (
-          <>
-            <Label>Email</Label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} />
-            <Label>Password</Label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            <Button onClick={handleSignIn}>Sign In</Button>
-          </>
-        ) : (
-          <>
-            <Label>Enter OTP</Label>
-            <Input value={otp} onChange={(e) => setOtp(e.target.value)} />
-            <Button onClick={verifyTOTP}>Verify OTP</Button>
-          </>
-        )}
-        {totpSecret && (
-          <>
-            <p>Scan this QR code in your authenticator app:</p>
-            <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${totpSecret}`} alt="TOTP QR Code" />
-          </>
-        )}
-        <Button onClick={enableTOTP}>Enable TOTP</Button>
-      </CardContent>
-    </Card>
+    <div className="min-h-screen flex items-center justify-center bg-black-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>{isLogin ? "Login" : "Sign Up"}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleAuth} className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLogin ? "Login" : "Sign Up"}
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              className="w-full"
+              onClick={() => setIsLogin(!isLogin)}
+            >
+              {isLogin
+                ? "Don't have an account? Sign Up"
+                : "Already have an account? Login"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
