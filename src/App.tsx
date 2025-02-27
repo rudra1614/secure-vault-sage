@@ -48,17 +48,17 @@ const App = () => {
                 session === null ? null : session ? (
                   <Index />
                 ) : (
-                  <Navigate to="/auth" replace />
+                  <Navigate to="/root" replace />
                 )
               }
             />
             <Route
               path="/auth"
               element={
-                session === null ? null : session ? (
-                  <Navigate to="/passwords" replace />
-                ) : (
+                session === null ? null : !session ? (
                   <Auth />
+                ) : (
+                  <Navigate to="/passwords" replace />
                 )
               }
             />
