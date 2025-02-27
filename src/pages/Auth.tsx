@@ -32,6 +32,8 @@ const Auth = () => {
       const { data, error } = await supabase.auth.mfa.listFactors();
       
       if (error) throw error;
+
+      console.log("MFA factors:", data);
       
       const hasVerifiedTotp = data.totp.some(factor => factor.status === 'verified');
       
@@ -40,20 +42,24 @@ const Auth = () => {
         const factor = data.totp.find(f => f.status === 'verified');
         if (factor) {
           setFactorId(factor.id);
+          console.log("Challenging factor ID:", factor.id);
           const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
             factorId: factor.id
           });
           
           if (challengeError) throw challengeError;
           
+          console.log("Challenge created:", challengeData);
           setChallengeId(challengeData.id);
           setSetupStep("verify");
         }
       } else {
         // Setup TOTP for user
+        console.log("No verified TOTP factor found, enrolling new one");
         await setupTotp();
       }
     } catch (error: any) {
+      console.error("Error checking TOTP status:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -65,17 +71,20 @@ const Auth = () => {
   // Setup TOTP for user
   const setupTotp = async () => {
     try {
+      console.log("Setting up TOTP...");
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'totp'
       });
       
       if (error) throw error;
       
+      console.log("TOTP enrollment successful:", data);
       setTotpSecret(data.totp.secret);
       setTotpUri(data.totp.uri);
       setFactorId(data.id);
       setSetupStep("setup");
     } catch (error: any) {
+      console.error("TOTP setup error:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -90,12 +99,16 @@ const Auth = () => {
     try {
       if (!factorId) throw new Error("Factor ID not found");
       
+      console.log("Verifying TOTP setup with factor ID:", factorId);
+      
       // For initial setup, we need to challenge first
       const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
         factorId: factorId
       });
       
       if (challengeError) throw challengeError;
+      
+      console.log("Challenge created for verification:", challengeData);
       
       // Then verify with the challenge ID
       const { data, error } = await supabase.auth.mfa.verify({
@@ -106,6 +119,8 @@ const Auth = () => {
       
       if (error) throw error;
       
+      console.log("TOTP verification successful:", data);
+      
       toast({
         title: "Success",
         description: "TOTP setup complete. You can now log in with your authenticator app.",
@@ -113,6 +128,7 @@ const Auth = () => {
       
       navigate("/passwords");
     } catch (error: any) {
+      console.error("TOTP verification error:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -129,6 +145,8 @@ const Auth = () => {
     try {
       if (!factorId || !challengeId) throw new Error("Authentication challenge not found");
       
+      console.log("Verifying TOTP login with factor ID:", factorId, "and challenge ID:", challengeId);
+      
       const { data, error } = await supabase.auth.mfa.verify({
         factorId: factorId,
         challengeId: challengeId,
@@ -137,6 +155,8 @@ const Auth = () => {
       
       if (error) throw error;
       
+      console.log("TOTP login verification successful:", data);
+      
       toast({
         title: "Success",
         description: "Logged in successfully",
@@ -144,6 +164,7 @@ const Auth = () => {
       
       navigate("/passwords");
     } catch (error: any) {
+      console.error("TOTP login verification error:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -161,6 +182,7 @@ const Auth = () => {
     try {
       if (isLogin) {
         // Login flow
+        console.log("Attempting login with email:", email);
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -168,10 +190,13 @@ const Auth = () => {
 
         if (error) throw error;
         
+        console.log("Login successful, user:", data.user);
+        
         // After successful password auth, check TOTP status
         await checkTotpStatus(data.user.id);
       } else {
         // Sign up flow
+        console.log("Attempting signup with email:", email);
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -179,11 +204,15 @@ const Auth = () => {
 
         if (error) throw error;
         
+        console.log("Signup response:", data);
+        
         if (data.session) {
           // If session exists, user is already confirmed, setup TOTP
+          console.log("User already confirmed, setting up TOTP");
           await checkTotpStatus(data.user.id);
         } else {
           // User needs to confirm email
+          console.log("User needs to confirm email");
           toast({
             title: "Success",
             description: "Account created successfully. Please check your email for verification.",
@@ -191,6 +220,7 @@ const Auth = () => {
         }
       }
     } catch (error: any) {
+      console.error("Authentication error:", error);
       toast({
         title: "Error",
         description: error.message,
