@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import OTPVerification from "./pages/OTPVerification";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,7 +49,7 @@ const App = () => {
                 session === null ? null : session ? (
                   <Index />
                 ) : (
-                  <Navigate to="/root" replace />
+                  <Navigate to="/auth" replace />
                 )
               }
             />
@@ -59,6 +60,16 @@ const App = () => {
                   <Auth />
                 ) : (
                   <Navigate to="/passwords" replace />
+                )
+              }
+            />
+            <Route 
+              path="/verify-otp" 
+              element={
+                session === null ? null : session ? (
+                  <OTPVerification />
+                ) : (
+                  <Navigate to="/auth" replace />
                 )
               }
             />
