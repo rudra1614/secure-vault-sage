@@ -25,6 +25,7 @@ const Auth = () => {
 
     try {
       if (isLogin) {
+        // Attempt to sign in with password
         const { data, error } = await supabase.auth.signInWithPassword({ 
           email, 
           password 
@@ -86,7 +87,7 @@ const Auth = () => {
 
       if (error) throw error;
 
-      // If verification is successful, navigate to passwords page
+      // Only navigate to passwords page after successful OTP verification
       navigate("/passwords");
       toast({
         title: "Success",
