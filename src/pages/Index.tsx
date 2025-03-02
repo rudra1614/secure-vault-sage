@@ -5,11 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Copy, Eye, EyeOff, Trash2
-  ,
-   
-  LogOut 
-  } from "lucide-react";
+import { Loader2, Plus, Copy, Eye, EyeOff, Trash2, LogOut, Shield, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -47,6 +43,7 @@ const Index = () => {
       navigate("/auth");
     }
   };
+  
   // Fetch credentials
   const { data: credentials, isLoading } = useQuery({
     queryKey: ["credentials"],
@@ -138,149 +135,199 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/30">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <Shield className="h-16 w-16 text-primary opacity-80" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading your secure vault...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-       <
-div
- className="
-flex justify
--
-between
- 
-items
--
-center
- mb-8">
-        <h1 className="text-3xl font-bold">Password Manager</h1>
-        <Button 
-          variant="outline" 
-          onClick={handleLogout}
-          className="flex items-center gap-2"
-        >
-          <LogOut className="h-4 w-4" />
-          Logout
-        </Button>
-      </div>
-      
-      {/* Add New Credential Form */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Add New Credential
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="website">Website URL</Label>
-              <Input
-                id="website"
-                value={newCredential.website}
-                onChange={(e) => setNewCredential(prev => ({ ...prev, website: e.target.value }))}
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="username">Username/Email</Label>
-              <Input
-                id="username"
-                value={newCredential.username}
-                onChange={(e) => setNewCredential(prev => ({ ...prev, username: e.target.value }))}
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={newCredential.password}
-                onChange={(e) => setNewCredential(prev => ({ ...prev, password: e.target.value }))}
-                required
-              />
-            </div>
-            <Button type="submit" disabled={addCredential.isPending}>
-              {addCredential.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Plus className="h-4 w-4 mr-2" />
-              )}
-              Add Credential
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Credentials List */}
-      <div className="grid gap-4">
-        {credentials?.map((cred) => (
-          <Card key={cred.id} className="overflow-hidden">
-            <CardContent className="p-6">
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between">
-                  <div className="font-medium">{cred["Website UrL"]}</div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleCopy(cred["Username/Email"]?.[0] || "")}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => handleDelete(cred.id)}
-                      disabled={deleteCredential.isPending}
-                    >
-                      {deleteCredential.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <div className="text-sm text-muted-foreground">
-                    Username/Email: {cred["Username/Email"]?.[0]}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm text-muted-foreground">
-                      Password:{" "}
-                      {showPassword === cred.id ? cred.Password : "••••••••"}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setShowPassword(showPassword === cred.id ? null : cred.id)}
-                    >
-                      {showPassword === cred.id ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleCopy(cred.Password || "")}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 pb-16">
+      <div className="container mx-auto py-8 px-4 max-w-5xl">
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-3">
+            <Shield className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-300">Password Vault</h1>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={handleLogout}
+            className="flex items-center gap-2 hover:bg-destructive/10 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
+        
+        {/* Add New Credential Form */}
+        <Card className="mb-8 border-primary/20 shadow-lg shadow-primary/5 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 pointer-events-none rounded-lg"></div>
+          <CardHeader className="relative border-b border-border/40">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Plus className="h-5 w-5 text-primary" />
+              Add New Credential
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="relative p-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="website" className="text-sm font-medium">Website URL</Label>
+                <Input
+                  id="website"
+                  value={newCredential.website}
+                  onChange={(e) => setNewCredential(prev => ({ ...prev, website: e.target.value }))}
+                  required
+                  className="transition-all focus-visible:ring-primary"
+                  placeholder="https://example.com"
+                />
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              <div className="grid gap-2">
+                <Label htmlFor="username" className="text-sm font-medium">Username/Email</Label>
+                <Input
+                  id="username"
+                  value={newCredential.username}
+                  onChange={(e) => setNewCredential(prev => ({ ...prev, username: e.target.value }))}
+                  required
+                  className="transition-all focus-visible:ring-primary"
+                  placeholder="your.email@example.com"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={newCredential.password}
+                  onChange={(e) => setNewCredential(prev => ({ ...prev, password: e.target.value }))}
+                  required
+                  className="transition-all focus-visible:ring-primary"
+                  placeholder="••••••••••"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                disabled={addCredential.isPending}
+                className="w-full mt-2 transition-all hover:shadow-md hover:shadow-primary/20"
+              >
+                {addCredential.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Key className="h-4 w-4 mr-2" />
+                )}
+                Save Credential
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Credentials List */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold mb-4 text-foreground/90">Your Credentials</h2>
+          <div className="grid gap-4">
+            {credentials?.length === 0 ? (
+              <Card className="p-12 border-dashed border-2 border-muted bg-muted/20">
+                <div className="flex flex-col items-center justify-center text-center space-y-3">
+                  <Key className="h-12 w-12 text-muted-foreground/50" />
+                  <p className="text-lg font-medium text-muted-foreground">No credentials saved yet</p>
+                  <p className="text-sm text-muted-foreground/70">Add your first credential using the form above</p>
+                </div>
+              </Card>
+            ) : (
+              credentials?.map((cred) => (
+                <Card 
+                  key={cred.id} 
+                  className="overflow-hidden border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-md group"
+                >
+                  <CardContent className="p-6">
+                    <div className="grid gap-4">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium text-lg flex items-center gap-2">
+                          <div className="p-2 rounded-full bg-primary/10 text-primary">
+                            <Key className="h-4 w-4" />
+                          </div>
+                          {cred["Website UrL"]}
+                        </div>
+                        <div className="flex items-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleCopy(cred["Username/Email"]?.[0] || "")}
+                            className="h-8 w-8 transition-colors hover:bg-primary/10 hover:text-primary hover:border-primary/30"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => handleDelete(cred.id)}
+                            disabled={deleteCredential.isPending}
+                            className="h-8 w-8 opacity-70 hover:opacity-100"
+                          >
+                            {deleteCredential.isPending ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="grid gap-3 bg-muted/30 p-3 rounded-md">
+                        <div className="text-sm text-muted-foreground flex justify-between items-center">
+                          <span className="font-medium text-foreground/80">Username/Email:</span> 
+                          <span className="font-mono bg-background/80 px-2 py-1 rounded text-foreground/90 flex items-center gap-2">
+                            {cred["Username/Email"]?.[0]}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleCopy(cred["Username/Email"]?.[0] || "")}
+                              className="h-6 w-6 ml-1 hover:bg-primary/10 hover:text-primary"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground flex justify-between items-center">
+                          <span className="font-medium text-foreground/80">Password:</span>
+                          <span className="font-mono bg-background/80 px-2 py-1 rounded text-foreground/90 flex items-center gap-2">
+                            {showPassword === cred.id ? (
+                              <span className="text-foreground/90">{cred.Password}</span>
+                            ) : (
+                              <span className="text-foreground/90">••••••••</span>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setShowPassword(showPassword === cred.id ? null : cred.id)}
+                              className="h-6 w-6 hover:bg-primary/10 hover:text-primary"
+                            >
+                              {showPassword === cred.id ? (
+                                <EyeOff className="h-3 w-3" />
+                              ) : (
+                                <Eye className="h-3 w-3" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleCopy(cred.Password || "")}
+                              className="h-6 w-6 hover:bg-primary/10 hover:text-primary"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
