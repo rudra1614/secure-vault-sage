@@ -21,6 +21,9 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
+      // First, clear any previous OTP verification status
+      localStorage.removeItem("otpVerified");
+      
       if (isLogin) {
         // Attempt to sign in with password
         const { data, error } = await supabase.auth.signInWithPassword({ 

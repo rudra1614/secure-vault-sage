@@ -8,7 +8,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-const OTPVerification = () => {
+interface OTPVerificationProps {
+  setIsOtpVerified: (value: boolean) => void;
+}
+
+const OTPVerification = ({ setIsOtpVerified }: OTPVerificationProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -19,17 +23,25 @@ const OTPVerification = () => {
   useEffect(() => {
     // Extract the email from the state passed during navigation
     const state = location.state as { email?: string };
+    
+    // If no email is in state, try to get the current user's email
     if (!state || !state.email) {
-      // If no email is provided, redirect back to auth page
-      toast({
-        title: "Error",
-        description: "Missing email information. Please log in again.",
-        variant: "destructive",
+      supabase.auth.getUser().then(({ data }) => {
+        if (data.user?.email) {
+          setEmail(data.user.email);
+        } else {
+          // If no email is provided, redirect back to auth page
+          toast({
+            title: "Error",
+            description: "Missing email information. Please log in again.",
+            variant: "destructive",
+          });
+          navigate("/auth");
+        }
       });
-      navigate("/auth");
-      return;
+    } else {
+      setEmail(state.email);
     }
-    setEmail(state.email);
   }, [location, navigate, toast]);
 
   const verifyOtp = async (e: React.FormEvent) => {
@@ -46,8 +58,13 @@ const OTPVerification = () => {
 
       if (error) throw error;
 
-      // Only navigate to passwords page after successful OTP verification
+      // Mark OTP as verified
+      localStorage.setItem("otpVerified", "true");
+      setIsOtpVerified(true);
+      
+      // Navigate to passwords page after successful OTP verification
       navigate("/passwords");
+      
       toast({
         title: "Success",
         description: "Email verified successfully",
@@ -83,7 +100,7 @@ const OTPVerification = () => {
               />
             </div>
             <p className="text-sm text-gray-500">
-              We've sent a verification code to your email ({email}). 
+              We've sent a verification code to your email {email ? `(${email})` : ''}. 
               Please enter it to continue.
             </p>
             <Button type="submit" className="w-full" disabled={isLoading}>

@@ -16,17 +16,31 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [session, setSession] = useState<boolean | null>(null);
+  const [isOtpVerified, setIsOtpVerified] = useState<boolean>(false);
 
   useEffect(() => {
+    // Check if OTP verification status exists in local storage
+    const otpVerificationStatus = localStorage.getItem("otpVerified") === "true";
+    setIsOtpVerified(otpVerificationStatus);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(!!session);
+      
+      // If session exists but OTP is not verified, clear session data
+      if (session && !otpVerificationStatus) {
+        localStorage.removeItem("otpVerified");
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(!!session);
+      
+      // If user logs out, reset OTP verification status
       if (!session) {
+        localStorage.removeItem("otpVerified");
+        setIsOtpVerified(false);
         // Clear query cache when user logs out
         queryClient.clear();
       }
@@ -46,8 +60,10 @@ const App = () => {
             <Route
               path="/passwords"
               element={
-                session === null ? null : session ? (
+                session === null ? null : (session && isOtpVerified) ? (
                   <Index />
+                ) : session ? (
+                  <Navigate to="/verify-otp" replace />
                 ) : (
                   <Navigate to="/auth" replace />
                 )
@@ -58,8 +74,10 @@ const App = () => {
               element={
                 session === null ? null : !session ? (
                   <Auth />
-                ) : (
+                ) : isOtpVerified ? (
                   <Navigate to="/passwords" replace />
+                ) : (
+                  <Navigate to="/verify-otp" replace />
                 )
               }
             />
@@ -67,7 +85,7 @@ const App = () => {
               path="/verify-otp" 
               element={
                 session === null ? null : session ? (
-                  <OTPVerification />
+                  <OTPVerification setIsOtpVerified={setIsOtpVerified} />
                 ) : (
                   <Navigate to="/auth" replace />
                 )
