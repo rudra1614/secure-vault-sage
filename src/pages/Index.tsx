@@ -40,7 +40,7 @@ const Index = () => {
         variant: "destructive",
       });
     } else {
-      navigate("/auth");
+      navigate("/home");
     }
   };
   
