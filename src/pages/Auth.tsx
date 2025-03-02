@@ -100,6 +100,16 @@ const Auth = () => {
                 required
               />
             </div>
+            {isLogin && (
+              <Button
+                type="button"
+                variant="link"
+                className="w-full p-0 h-auto text-sm justify-start"
+                onClick={() => navigate("/forgot-password")}
+              >
+                Forgot your password?
+              </Button>
+            )}
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLogin ? "Login" : "Sign Up"}
             </Button>
