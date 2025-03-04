@@ -10,6 +10,8 @@ import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import OTPVerification from "./pages/OTPVerification";
+import PasswordReset from "./pages/PasswordReset";
+import UpdatePassword from "./pages/UpdatePassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -91,6 +93,8 @@ const App = () => {
                 )
               }
             />
+            <Route path="/reset-password" element={<PasswordReset />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

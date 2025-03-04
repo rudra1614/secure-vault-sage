@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -135,6 +135,17 @@ const Auth = () => {
                   />
                 </div>
               </div>
+              
+              {isLogin && (
+                <div className="text-right">
+                  <Link 
+                    to="/reset-password" 
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+              )}
               
               <Button 
                 type="submit" 
